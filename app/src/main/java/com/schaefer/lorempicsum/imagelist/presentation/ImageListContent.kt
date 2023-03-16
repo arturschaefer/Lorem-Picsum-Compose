@@ -1,7 +1,7 @@
 package com.schaefer.lorempicsum.imagelist.presentation
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,54 +30,56 @@ import com.schaefer.lorempicsum.imagelist.presentation.components.ImageCard
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun ImageListContent(imageListViewModel: ImageListViewModel) {
+internal fun ImageListContent(
+    imageListViewModel: ImageListViewModel
+) {
     var refreshing by remember { mutableStateOf(false) }
 
     val pullRefreshState: PullRefreshState = rememberPullRefreshState(
         refreshing = refreshing,
         onRefresh = imageListViewModel::getImageList
     )
+    val state = imageListViewModel.state.collectAsState().value
+    refreshing = state.isLoading
 
-    Column(
+    if (state.hasError) {
+        ErrorDialog(message = stringResource(id = R.string.problem_occurred_description)) {
+            imageListViewModel.dialogButtonClicked()
+        }
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .pullRefresh(pullRefreshState),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        when (val state = imageListViewModel.state.collectAsState().value) {
-            ImageListState.EmptyList -> {
-                refreshing = false
+        when (state.content) {
+            is ImageListState.EmptyList -> {
                 Text(
                     text = stringResource(R.string.no_data_available),
                     modifier = Modifier.padding(16.dp)
                 )
             }
 
-            ImageListState.Error -> {
-                refreshing = false
-                ErrorDialog(message = stringResource(id = R.string.problem_occurred_description))
-            }
-
             is ImageListState.HasContent -> {
-                refreshing = false
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 128.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(items = state.list, key = { it.id }) { item ->
+                    items(items = state.content.list, key = { it.id }) { item ->
                         ImageCard(urlImage = item.url)
                     }
                 }
             }
-
-            ImageListState.Loading -> {
-                refreshing = true
-            }
         }
 
-        PullRefreshIndicator(refreshing = refreshing, state = pullRefreshState, scale = true)
+        PullRefreshIndicator(
+            refreshing = refreshing,
+            state = pullRefreshState,
+            scale = true,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
