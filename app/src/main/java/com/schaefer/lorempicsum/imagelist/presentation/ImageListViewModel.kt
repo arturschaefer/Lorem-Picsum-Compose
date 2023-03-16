@@ -9,14 +9,16 @@ import timber.log.Timber
 
 internal class ImageListViewModel(
     private val getImageListUseCase: GetImageListUseCase
-) : ViewModelActionState<ImageListState, ImageListAction>(ImageListState.Loading) {
+) : ViewModelActionState<ImageListFullState, ImageListAction>(
+    ImageListFullState(content = ImageListState.EmptyList)
+) {
 
     init {
         getImageList()
     }
 
     fun getImageList() {
-        setState(ImageListState.Loading)
+        setState(state.value.copy(isLoading = true, hasError = false))
         viewModelScope.launch {
             runCatching { getImageListUseCase.observeList() }
                 .onFailure { handleError(it) }
@@ -24,12 +26,27 @@ internal class ImageListViewModel(
         }
     }
 
-    private fun handleError(it: Throwable) {
-        Timber.e(it)
-        setState(ImageListState.Error)
+    fun dialogButtonClicked() {
+        setState(state.value.copy(hasError = false))
     }
 
-    private fun handleSuccess(it: List<ImageVO>) {
-        setState(ImageListState.HasContent(it))
+    private fun handleError(it: Throwable) {
+        Timber.e(it)
+        setState(
+            state.value.copy(
+                isLoading = false,
+                hasError = true
+            )
+        )
+    }
+
+    private fun handleSuccess(list: List<ImageVO>) {
+        setState(
+            state.value.copy(
+                isLoading = false,
+                hasError = false,
+                content = ImageListState.HasContent(list)
+            )
+        )
     }
 }
