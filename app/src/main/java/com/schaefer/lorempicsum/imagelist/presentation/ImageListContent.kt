@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.schaefer.lorempicsum.R
+import com.schaefer.lorempicsum.core.presentation.Dimens
 import com.schaefer.lorempicsum.imagelist.presentation.components.EmptyListContent
 import com.schaefer.lorempicsum.imagelist.presentation.components.ErrorDialog
 import com.schaefer.lorempicsum.imagelist.presentation.components.ImageCard
@@ -59,10 +60,10 @@ internal fun ImageListContent(
 
             is ImageListState.HasContent -> {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 128.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    columns = GridCells.Adaptive(minSize = IMAGE_MIN_SIZE),
+                    contentPadding = PaddingValues(horizontal = Dimens.M, vertical = Dimens.S),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.S),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.S),
                 ) {
                     items(items = state.content.list, key = { it.id }) { item ->
                         ImageCard(urlImage = item.url)
@@ -79,3 +80,5 @@ internal fun ImageListContent(
         )
     }
 }
+
+private val IMAGE_MIN_SIZE = 128.dp
